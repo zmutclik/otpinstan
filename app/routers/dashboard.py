@@ -244,7 +244,7 @@ async def api_docs_page(request: Request, username: str = ""):
     if redirect:
         return redirect
 
-    base_url = f"http://192.168.80.10:8032/{username}"
+    base_url = f"{request.base_url.scheme}://{request.base_url.netloc}/{username}"
 
     return templates.TemplateResponse("api_docs.html", {
         "request": request,
