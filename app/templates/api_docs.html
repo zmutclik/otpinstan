@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-content p-6 max-w-4xl mx-auto">
+  <div class="page-header">
+    <div class="flex items-center gap-3">
+      <button class="hamburger" onclick="openSidebar()" aria-label="Menu">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6h18M3 12h18M3 18h18"/>
+        </svg>
+      </button>
+      <div>
+        <h1>API Documentation</h1>
+        <p class="subtitle">@ {{ username }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Base URL -->
+  <div class="card p-5 mb-4">
+    <h2 style="font-size:.9rem;font-weight:700;color:#fff;margin-bottom:12px">Base URL</h2>
+    <pre><span style="color:#8b83ff;font-weight:600">{{ base_url }}</span></pre>
+  </div>
+
+  <!-- 1. Order OTP -->
+  <div class="card p-5 mb-4">
+    <h2 style="font-size:.9rem;font-weight:700;color:#fff;margin-bottom:12px">
+      1. Order OTP
+      <span style="font-size:.72rem;font-weight:500;color:#00d9a5;background:rgba(0,217,165,.1);padding:2px 8px;border-radius:4px;margin-left:8px">GET /getotp</span>
+    </h2>
+    <p style="font-size:.8rem;color:#6b7280;margin-bottom:14px">Memesan nomor HP baru untuk menerima OTP.</p>
+    <div style="margin-bottom:6px"><span style="font-size:.75rem;color:#6b7280;font-weight:600">URL:</span></div>
+    <pre><span style="color:#e2e4f0">{{ base_url }}/getotp?service=wa&amp;country=6</span></pre>
+    <div style="margin-top:12px;margin-bottom:6px"><span style="font-size:.75rem;color:#6b7280;font-weight:600">Parameter:</span></div>
+    <table style="margin-bottom:12px">
+      <thead>
+        <tr>
+          <th style="padding:6px 10px">Param</th>
+          <th style="padding:6px 10px">Deskripsi</th>
+          <th style="padding:6px 10px">Contoh</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="table-row">
+          <td style="padding:8px 10px"><span style="color:#8b83ff;font-family:monospace;font-size:.78rem">service</span></td>
+          <td style="font-size:.8rem;padding:8px 10px">Kode layanan</td>
+          <td style="font-family:monospace;font-size:.78rem;padding:8px 10px">wa, tg, ig, go, sh</td>
+        </tr>
+        <tr class="table-row">
+          <td style="padding:8px 10px"><span style="color:#8b83ff;font-family:monospace;font-size:.78rem">country</span></td>
+          <td style="font-size:.8rem;padding:8px 10px">ID negara</td>
+          <td style="font-family:monospace;font-size:.78rem;padding:8px 10px">6 (Indonesia)</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="margin-top:12px;margin-bottom:6px"><span style="font-size:.75rem;color:#6b7280;font-weight:600">Response Success:</span></div>
+    <pre>{
+  "success": true,
+  "order_id": "S5-123456789",
+  "phone": "628123456789",
+  "service": "wa",
+  "country": 6,
+  "price": 3200,
+  "status": "pending"
+}</pre>
+  </div>
+
+  <!-- 2. Cek OTP -->
+  <div class="card p-5 mb-4">
+    <h2 style="font-size:.9rem;font-weight:700;color:#fff;margin-bottom:12px">
+      2. Cek OTP
+      <span style="font-size:.72rem;font-weight:500;color:#00d9a5;background:rgba(0,217,165,.1);padding:2px 8px;border-radius:4px;margin-left:8px">GET /chekotp</span>
+    </h2>
+    <p style="font-size:.8rem;color:#6b7280;margin-bottom:14px">Cek apakah OTP sudah diterima untuk nomor HP tertentu.</p>
+    <div style="margin-bottom:6px"><span style="font-size:.75rem;color:#6b7280;font-weight:600">URL:</span></div>
+    <pre><span style="color:#e2e4f0">{{ base_url }}/chekotp?phone=628123456789</span></pre>
+    <div style="margin-top:12px;margin-bottom:6px"><span style="font-size:.75rem;color:#6b7280;font-weight:600">Response:</span></div>
+    <pre>{
+  "success": true,
+  "order_id": "S5-123456789",
+  "phone": "628123456789",
+  "status": "received",
+  "otp": "957418",
+  "otp_updated_at": "2026-07-01T10:15:00"
+}</pre>
+  </div>
+
+  <!-- 3. Status Sukses -->
+  <div class="card p-5 mb-4">
+    <h2 style="font-size:.9rem;font-weight:700;color:#fff;margin-bottom:12px">
+      3. Status Sukses
+      <span style="font-size:.72rem;font-weight:500;color:#00d9a5;background:rgba(0,217,165,.1);padding:2px 8px;border-radius:4px;margin-left:8px">GET /status/sukses/{phone}</span>
+    </h2>
+    <p style="font-size:.8rem;color:#6b7280;margin-bottom:14px">Laporkan bahwa nomor HP berhasil digunakan.</p>
+    <div style="margin-bottom:6px"><span style="font-size:.75rem;color:#6b7280;font-weight:600">URL:</span></div>
+    <pre><span style="color:#e2e4f0">{{ base_url }}/status/sukses/628123456789</span></pre>
+  </div>
+
+  <!-- 4. Status Gagal -->
+  <div class="card p-5 mb-4">
+    <h2 style="font-size:.9rem;font-weight:700;color:#fff;margin-bottom:12px">
+      4. Status Gagal
+      <span style="font-size:.72rem;font-weight:500;color:#ff5c5c;background:rgba(255,92,92,.1);padding:2px 8px;border-radius:4px;margin-left:8px">GET /status/gagal/{phone}</span>
+    </h2>
+    <p style="font-size:.8rem;color:#6b7280;margin-bottom:14px">Laporkan bahwa nomor HP tidak bisa digunakan.</p>
+    <div style="margin-bottom:6px"><span style="font-size:.75rem;color:#6b7280;font-weight:600">URL:</span></div>
+    <pre><span style="color:#e2e4f0">{{ base_url }}/status/gagal/628123456789</span></pre>
+  </div>
+</div>
+{% endblock %}

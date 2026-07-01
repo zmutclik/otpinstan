@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-content p-6 max-w-6xl mx-auto">
+  <div class="page-header">
+    <div class="flex items-center gap-3">
+      <button class="hamburger" onclick="openSidebar()" aria-label="Menu">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6h18M3 12h18M3 18h18"/>
+        </svg>
+      </button>
+      <div>
+        <h1>Dashboard</h1>
+        <p class="subtitle">Ringkasan aktivitas OTP &mdash; @{{ username }}</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="server-badge">
+        <span class="pulse" style="width:7px;height:7px;border-radius:50%;background:#10b981"></span>
+        {{ server_label }}
+      </div>
+      <a href="/{{ username }}/" class="btn-ghost">
+        <svg style="width:14px;height:14px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        Refresh
+      </a>
+    </div>
+  </div>
+
+  <!-- Stat Cards -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="stat-card">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="stat-icon" style="background:rgba(108,99,255,.15)">
+          <svg style="color:#6c63ff" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+          </svg>
+        </div>
+        <div class="text-xs text-gray-500 font-medium">Saldo</div>
+      </div>
+      <div class="stat-value text-white">Rp {{ "{:,}".format(balance) }}</div>
+      <div class="stat-label">OTPInstan balance</div>
+    </div>
+    <div class="stat-card">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="stat-icon" style="background:rgba(0,217,165,.15)">
+          <svg style="color:#00d9a5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div class="text-xs text-gray-500 font-medium">Sukses</div>
+      </div>
+      <div class="stat-value" style="color:#00d9a5">{{ sukses }}</div>
+      <div class="stat-label">Dilaporkan client</div>
+    </div>
+    <div class="stat-card">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="stat-icon" style="background:rgba(255,92,92,.15)">
+          <svg style="color:#ff5c5c" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div class="text-xs text-gray-500 font-medium">Gagal</div>
+      </div>
+      <div class="stat-value" style="color:#ff5c5c">{{ gagal }}</div>
+      <div class="stat-label">Dilaporkan client</div>
+    </div>
+    <div class="stat-card">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="stat-icon" style="background:rgba(255,159,67,.15)">
+          <svg style="color:#ff9f43" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div class="text-xs text-gray-500 font-medium">Pending</div>
+      </div>
+      <div class="stat-value" style="color:#ff9f43">{{ pending }}</div>
+      <div class="stat-label">Menunggu OTP</div>
+    </div>
+  </div>
+
+  <!-- Recent Orders -->
+  <div class="card p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h2 style="font-size:.9rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px">
+        <svg style="width:16px;height:16px;color:#6c63ff" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        Order Terakhir
+      </h2>
+      <a href="/{{ username }}/orders" style="color:#6c63ff;font-size:.78rem;font-weight:600;text-decoration:none">
+        Lihat semua &rarr;
+      </a>
+    </div>
+
+    {% if not recent %}
+    <div class="text-center py-10 text-gray-600 text-sm flex flex-col items-center gap-3">
+      <svg style="width:40px;height:40px;color:#22243a" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+      </svg>
+      <span>Belum ada order. Order via API untuk mulai.</span>
+    </div>
+    {% endif %}
+
+    <!-- Desktop Table -->
+    <div class="desktop-table overflow-x-auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Nomor HP</th>
+            <th>Service</th>
+            <th>Harga</th>
+            <th>Status</th>
+            <th>OTP</th>
+            <th>Waktu</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for o in recent %}
+          {% set st = o.status %}
+          <tr class="table-row">
+            <td><span style="color:#8b83ff;font-family:monospace;font-size:.78rem">{{ o.order_id }}</span></td>
+            <td><span style="font-family:monospace;font-size:.8rem;color:#d1d5db">{{ o.phone }}</span></td>
+            <td><span style="background:#1a1b2e;color:#9ca3af;padding:2px 8px;border-radius:5px;font-family:monospace;font-size:.7rem">{{ o.service }}</span></td>
+            <td style="color:#d1d5db;font-size:.8rem">Rp {{ "{:,}".format(o.price) }}</td>
+            <td>
+              {% if st in ["pending","received","cancelled"] %}
+              <span class="badge badge-{{ st }}">{{ st }}</span>
+              {% else %}
+              <span>{{ st }}</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if o.otp_code %}
+              <span style="color:#00d9a5;font-family:monospace;font-weight:700;font-size:.82rem">{{ o.otp_code }}</span>
+              {% else %}
+              <span style="color:#4b5563">&mdash;</span>
+              {% endif %}
+            </td>
+            <td style="color:#6b7280;font-size:.75rem">
+              {% if o.created_at %}{{ o.created_at.strftime("%d/%m %H:%M") }}{% else %}&mdash;{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mobile Cards -->
+    <div class="mobile-cards">
+      {% for o in recent %}
+      {% set st = o.status %}
+      <div class="mobile-card">
+        <div class="row"><span class="lbl">Order ID</span><span class="val mono" style="color:#8b83ff">{{ o.order_id }}</span></div>
+        <div class="row"><span class="lbl">Nomor HP</span><span class="val mono">{{ o.phone }}</span></div>
+        <div class="row"><span class="lbl">Service</span>
+          <span class="val"><span style="background:#1a1b2e;color:#9ca3af;padding:2px 8px;border-radius:5px;font-family:monospace;font-size:.68rem">{{ o.service }}</span></span>
+        </div>
+        <div class="row"><span class="lbl">Harga</span><span class="val">Rp {{ "{:,}".format(o.price) }}</span></div>
+        <div class="row"><span class="lbl">Status</span>
+          <span class="val">
+            {% if st in ["pending","received","cancelled"] %}
+            <span class="badge badge-{{ st }}">{{ st }}</span>
+            {% else %}<span>{{ st }}</span>{% endif %}
+          </span>
+        </div>
+        <div class="row"><span class="lbl">OTP</span>
+          {% if o.otp_code %}
+          <span class="val mono green">{{ o.otp_code }}</span>
+          {% else %}<span class="val">&mdash;</span>{% endif %}
+        </div>
+        <div class="row"><span class="lbl">Waktu</span>
+          <span class="val" style="color:#6b7280">
+            {% if o.created_at %}{{ o.created_at.strftime("%d/%m %H:%M") }}{% else %}&mdash;{% endif %}
+          </span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-content p-6 max-w-6xl mx-auto">
+  <div class="page-header">
+    <div class="flex items-center gap-3">
+      <button class="hamburger" onclick="openSidebar()" aria-label="Menu">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6h18M3 12h18M3 18h18"/>
+        </svg>
+      </button>
+      <div>
+        <h1>Daftar OTP</h1>
+        <p class="subtitle">@ {{ username }} &mdash; {{ orders | length }} order</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="card p-4 mb-4">
+    <div class="filter-row flex items-center gap-3">
+      <button class="tab-btn active" onclick="filterTable('all',this)">Semua</button>
+      <button class="tab-btn" onclick="filterTable('pending',this)">Pending</button>
+      <button class="tab-btn" onclick="filterTable('received',this)">Received</button>
+      <button class="tab-btn" onclick="filterTable('cancelled',this)">Cancelled</button>
+    </div>
+  </div>
+
+  <div class="card p-5">
+    <!-- Desktop Table -->
+    <div class="desktop-table overflow-x-auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Nomor HP</th>
+            <th>Service</th>
+            <th>Harga</th>
+            <th>Status</th>
+            <th>OTP</th>
+            <th>Client</th>
+            <th>Waktu</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for o in orders %}
+          {% set st = o.status or "" %}
+          {% set cs = o.client_status %}
+          <tr class="table-row otp-row" data-status="{{ st }}">
+            <td><span style="color:#8b83ff;font-family:monospace;font-size:.78rem">{{ o.order_id }}</span></td>
+            <td><span style="font-family:monospace;font-size:.8rem;color:#d1d5db">{{ o.phone }}</span></td>
+            <td><span style="background:#1a1b2e;color:#9ca3af;padding:2px 8px;border-radius:5px;font-family:monospace;font-size:.7rem">{{ o.service }}</span></td>
+            <td style="color:#d1d5db;font-size:.8rem">Rp {{ "{:,}".format(o.price) }}</td>
+            <td>
+              {% if st in ["pending","received","cancelled"] %}
+              <span class="badge badge-{{ st }}">{{ st }}</span>
+              {% else %}<span>{{ st }}</span>{% endif %}
+            </td>
+            <td>
+              {% if o.otp_code %}
+              <span style="color:#00d9a5;font-family:monospace;font-weight:700;font-size:.82rem">{{ o.otp_code }}</span>
+              <button onclick="copyText('{{ o.otp_code }}')" class="btn-copy">Copy</button>
+              {% else %}
+              <span style="color:#4b5563">&mdash;</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if cs == "sukses" %}
+              <span class="badge badge-sukses">sukses</span>
+              {% elif cs == "gagal" %}
+              <span class="badge badge-gagal">gagal</span>
+              {% else %}
+              <span style="color:#4b5563;font-size:.78rem">&mdash;</span>
+              {% endif %}
+            </td>
+            <td style="color:#6b7280;font-size:.75rem">
+              {% if o.created_at %}{{ o.created_at.strftime("%d/%m %H:%M") }}{% else %}&mdash;{% endif %}
+            </td>
+            <td>
+              {% if st == "pending" %}
+              <a href="/{{ username }}/cancel/{{ o.order_id }}" class="btn-danger"
+                 onclick="return confirm('Cancel order ini?')">Cancel</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mobile Cards -->
+    <div class="mobile-cards">
+      {% for o in orders %}
+      {% set st = o.status or "" %}
+      {% set cs = o.client_status %}
+      <div class="mobile-card" data-status="{{ st }}">
+        <div class="row"><span class="lbl">Order ID</span><span class="val mono" style="color:#8b83ff">{{ o.order_id }}</span></div>
+        <div class="row"><span class="lbl">Nomor HP</span><span class="val mono">{{ o.phone }}</span></div>
+        <div class="row"><span class="lbl">Service</span>
+          <span class="val"><span style="background:#1a1b2e;color:#9ca3af;padding:2px 8px;border-radius:5px;font-family:monospace;font-size:.68rem">{{ o.service }}</span></span>
+        </div>
+        <div class="row"><span class="lbl">Harga</span><span class="val">Rp {{ "{:,}".format(o.price) }}</span></div>
+        <div class="row"><span class="lbl">Status</span>
+          <span class="val">
+            {% if st in ["pending","received","cancelled"] %}
+            <span class="badge badge-{{ st }}">{{ st }}</span>
+            {% else %}<span>{{ st }}</span>{% endif %}
+          </span>
+        </div>
+        <div class="row"><span class="lbl">OTP</span>
+          {% if o.otp_code %}
+          <span class="val mono green">{{ o.otp_code }}</span>
+          {% else %}<span class="val">&mdash;</span>{% endif %}
+        </div>
+        <div class="row"><span class="lbl">Client</span>
+          <span class="val">
+            {% if cs == "sukses" %}<span class="badge badge-sukses">sukses</span>
+            {% elif cs == "gagal" %}<span class="badge badge-gagal">gagal</span>
+            {% else %}<span style="color:#4b5563;font-size:.78rem">&mdash;</span>{% endif %}
+          </span>
+        </div>
+        <div class="row"><span class="lbl">Waktu</span>
+          <span class="val" style="color:#6b7280">
+            {% if o.created_at %}{{ o.created_at.strftime("%d/%m %H:%M") }}{% else %}&mdash;{% endif %}
+          </span>
+        </div>
+        <div class="actions">
+          {% if st == "pending" %}
+          <a href="/{{ username }}/cancel/{{ o.order_id }}" class="btn-danger"
+             onclick="return confirm('Cancel order ini?')">Cancel</a>
+          {% endif %}
+          {% if o.otp_code %}
+          <button onclick="copyText('{{ o.otp_code }}')" class="btn-copy">Copy OTP</button>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
