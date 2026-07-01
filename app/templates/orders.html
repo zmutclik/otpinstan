@@ -1,6 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="page-content p-6 max-w-6xl mx-auto">
+
+  {% set err = request.query_params.get('error', '') %}
+  {% if err %}
+  <div id="cancel-error-banner" style="background:rgba(255,92,92,.15);border:1px solid #ff5c5c;color:#ff5c5c;border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+    <span>⚠️ {{ err }}</span>
+    <button onclick="document.getElementById('cancel-error-banner').remove()" style="background:none;border:none;color:#ff5c5c;cursor:pointer;font-size:18px;">&times;</button>
+  </div>
+  {% endif %}
+
   <div class="page-header">
     <div class="flex items-center gap-3">
       <button class="hamburger" onclick="openSidebar()" aria-label="Menu">

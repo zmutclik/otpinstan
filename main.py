@@ -12,7 +12,7 @@ from app.routers import api, dashboard
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    os.makedirs("/app/data", exist_ok=True)
+    os.makedirs(os.path.join(os.path.dirname(__file__), "data"), exist_ok=True)
     await init_db()
     yield
 
@@ -55,10 +55,24 @@ async def catch_all(username: str, path: str, request: Request):
 
     # ── API endpoints ──────────────────────────────────────────────────
     elif path == "getotp":
+        service = request.query_params.get("service", "").strip()
+        country_raw = request.query_params.get("country", "").strip()
+        if not service or not country_raw:
+            return JSONResponse(
+                {"success": False, "detail": "Parameter service dan country wajib diisi"},
+                status_code=400,
+            )
+        try:
+            country = int(country_raw)
+        except ValueError:
+            return JSONResponse(
+                {"success": False, "detail": "Parameter country harus berupa angka"},
+                status_code=400,
+            )
         return await api.getotp(
             username=username,
-            service=request.query_params.get("service", ""),
-            country=int(request.query_params.get("country", 0)),
+            service=service,
+            country=country,
         )
 
     elif path == "chekotp":

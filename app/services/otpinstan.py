@@ -4,13 +4,13 @@ OTPINSTAN_BASE = "https://otpinstan.com/api/reseller"
 
 
 def _headers(api_key: str) -> dict:
-    return {"X-Api-Key": api_key, "Content-Type": "application/json"}
+    return {"X-Api-Key": api_key}
 
 
 async def _api(endpoint: str, api_key: str, method: str = "GET",
-               data: dict = None, params: dict = None):
+               data: dict = None, params: dict = None, timeout: float = 30.0):
     headers = _headers(api_key)
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    async with httpx.AsyncClient(timeout=timeout) as client:
         if method == "GET":
             resp = await client.get(
                 f"{OTPINSTAN_BASE}/{endpoint}",
@@ -19,7 +19,7 @@ async def _api(endpoint: str, api_key: str, method: str = "GET",
         else:
             resp = await client.post(
                 f"{OTPINSTAN_BASE}/{endpoint}",
-                headers=headers, data=data, json=data,
+                headers=headers, data=data,
             )
         resp.raise_for_status()
         return resp.json()
@@ -54,4 +54,4 @@ async def cancel_order(api_key: str, order_id: str, server: str = "s5"):
     else:
         endpoint = "cancel.php"
     return await _api(endpoint, api_key, method="POST",
-                      data={"order_id": order_id})
+                      data={"order_id": order_id}, timeout=35.0)

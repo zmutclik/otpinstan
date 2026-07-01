@@ -42,8 +42,7 @@ async def _get_user_or_redirect(request: Request, username: str):
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request, username: str = ""):
     await get_or_create_user(username)
-    return templates.TemplateResponse("login.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "login.html", {
         "username": username,
         "error": None,
     })
@@ -57,8 +56,7 @@ async def login(request: Request, username: str = ""):
     user = await get_or_create_user(username)
 
     if input_user != username or input_pass != user.password:
-        return templates.TemplateResponse("login.html", {
-            "request": request,
+        return templates.TemplateResponse(request, "login.html", {
             "username": username,
             "error": "Username atau password salah",
         })
@@ -120,8 +118,7 @@ async def dashboard(request: Request, username: str = ""):
     server = user.server or "s5"
     server_label = {"s5": "Server 5", "s1": "Server 1", "s6": "Server 6"}.get(server, server.upper())
 
-    return templates.TemplateResponse("dashboard.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "dashboard.html", {
         "username": username,
         "user": user,
         "current_page": "dashboard",
@@ -151,8 +148,7 @@ async def orders_page(request: Request, username: str = ""):
         result = await session_db.execute(stmt)
         orders = result.scalars().all()
 
-    return templates.TemplateResponse("orders.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "orders.html", {
         "username": username,
         "user": user,
         "current_page": "orders",
@@ -201,8 +197,7 @@ def _settings_response(request, username, user, msg, error):
         else:
             api_key_masked = api_key_display[:4] + "•" * 6
 
-    return templates.TemplateResponse("settings.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "settings.html", {
         "username": username,
         "user": user,
         "current_page": "settings",
@@ -220,22 +215,34 @@ async def cancel_order_route(order_id: str, request: Request, username: str = ""
         return JSONResponse({"success": False, "message": "Unauthorized"}, status_code=401)
 
     user = await get_or_create_user(username)
+
+    cancel_ok = False
+    cancel_error = ""
     try:
-        await otp_cancel(user.api_key, order_id, user.server)
-    except Exception:
-        pass
+        resp = await otp_cancel(user.api_key, order_id, user.server)
+        if resp.get("success"):
+            cancel_ok = True
+        else:
+            cancel_error = resp.get("message", "Cancel ditolak oleh server")
+    except Exception as e:
+        cancel_error = f"Timeout/gagal menghubungi server: {e}"
 
-    async with async_session() as session_db:
-        stmt = select(Order).where(
-            Order.order_id == order_id, Order.username == username
-        )
-        result = await session_db.execute(stmt)
-        order = result.scalar_one_or_none()
-        if order:
-            order.status = "cancelled"
-            await session_db.commit()
-
-    return RedirectResponse(url=f"/{username}/orders", status_code=302)
+    if cancel_ok:
+        async with async_session() as session_db:
+            stmt = select(Order).where(
+                Order.order_id == order_id, Order.username == username
+            )
+            result = await session_db.execute(stmt)
+            order = result.scalar_one_or_none()
+            if order:
+                order.status = "cancelled"
+                await session_db.commit()
+        return RedirectResponse(url=f"/{username}/orders", status_code=302)
+    else:
+        # Cancel gagal — status tidak diubah, redirect dengan pesan error
+        import urllib.parse
+        err_msg = urllib.parse.quote(f"Cancel gagal: {cancel_error}")
+        return RedirectResponse(url=f"/{username}/orders?error={err_msg}", status_code=302)
 
 
 @router.get("/api-docs")
@@ -246,8 +253,7 @@ async def api_docs_page(request: Request, username: str = ""):
 
     base_url = f"{request.base_url.scheme}://{request.base_url.netloc}/{username}"
 
-    return templates.TemplateResponse("api_docs.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "api_docs.html", {
         "username": username,
         "user": user,
         "current_page": "api-docs",
