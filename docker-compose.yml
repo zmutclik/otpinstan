@@ -1,0 +1,13 @@
+services:
+  otpinstan:
+    build: .
+    container_name: otpinstan
+    restart: unless-stopped
+    ports:
+      - "8032:8032"
+    volumes:
+      - ./main.py:/app/main.py
+      - ./app:/app/app
+      - ./data.db:/app/data.db
+    environment:
+      - OTPK_instanAPI_KEY=${OTPK_instanAPI_KEY:-}
