@@ -2,6 +2,7 @@
 OTPInstan Bridge — FastAPI App (Multi-User)
 Run: uvicorn main:app --host 0.0.0.0 --port 8032
 """
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, HTMLResponse
@@ -11,6 +12,7 @@ from app.routers import api, dashboard
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    os.makedirs("/app/data", exist_ok=True)
     await init_db()
     yield
 

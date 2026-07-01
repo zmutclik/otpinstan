@@ -1,4 +1,3 @@
-import os
 from sqlalchemy import select
 from app.database import async_session
 from app.models import User
@@ -18,7 +17,7 @@ async def get_or_create_user(username: str) -> User:
             user = User(
                 username=username,
                 password=DEFAULT_PASSWORD,
-                api_key=os.getenv("OTPK_instanAPI_KEY", ""),
+                api_key="",
                 server=DEFAULT_SERVER,
             )
             session.add(user)

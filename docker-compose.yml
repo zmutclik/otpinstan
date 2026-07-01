@@ -8,6 +8,7 @@ services:
     volumes:
       - ./main.py:/app/main.py
       - ./app:/app/app
-      - ./data.db:/app/data.db
-    environment:
-      - OTPK_instanAPI_KEY=${OTPK_instanAPI_KEY:-}
+      - otpinstan_data:/app/data
+
+volumes:
+  otpinstan_data:
