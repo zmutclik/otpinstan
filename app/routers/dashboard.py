@@ -227,7 +227,7 @@ async def cancel_order_route(order_id: str, request: Request, username: str = ""
     except Exception as e:
         cancel_error = f"Timeout/gagal menghubungi server: {e}"
 
-    if cancel_ok:
+    if cancel_ok or cancel_error == "Order sudah dibatalkan sebelumnya":
         async with async_session() as session_db:
             stmt = select(Order).where(
                 Order.order_id == order_id, Order.username == username
