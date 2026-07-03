@@ -7,7 +7,7 @@ from itsdangerous import URLSafeSerializer
 from pathlib import Path
 from app.database import async_session
 from app.models import Order, User
-from app.services.otpinstan import get_balance as otp_get_balance, cancel_order as otp_cancel
+from app.services.otpinstan import get_balance as otp_get_balance, cancel_order as otp_cancel, check_order as otp_check_order
 from app.config import get_or_create_user, update_user, DEFAULT_PASSWORD
 
 router = APIRouter()
@@ -243,6 +243,49 @@ async def cancel_order_route(order_id: str, request: Request, username: str = ""
         import urllib.parse
         err_msg = urllib.parse.quote(f"Cancel gagal: {cancel_error}")
         return RedirectResponse(url=f"/{username}/orders?error={err_msg}", status_code=302)
+
+
+@router.get("/check/{order_id}")
+async def check_order_route(order_id: str, request: Request, username: str = ""):
+    if not await _check_session(request, username):
+        return JSONResponse({"success": False, "message": "Unauthorized"}, status_code=401)
+
+    user = await get_or_create_user(username)
+
+    async with async_session() as session_db:
+        stmt = select(Order).where(
+            Order.order_id == order_id, Order.username == username
+        )
+        result = await session_db.execute(stmt)
+        order = result.scalar_one_or_none()
+
+        if not order:
+            return JSONResponse({"success": False, "message": "Order tidak ditemukan"}, status_code=404)
+
+        try:
+            check_resp = await otp_check_order(user.api_key, order_id, user.server)
+            if check_resp.get("success"):
+                new_status = check_resp.get("status", order.status)
+                new_otp = check_resp.get("otp")
+                if new_status != order.status:
+                    order.status = new_status
+                if new_otp and new_otp != order.otp_code:
+                    order.otp_code = new_otp
+                    order.otp_updated_at = datetime.datetime.utcnow()
+                await session_db.commit()
+                return JSONResponse({
+                    "success": True,
+                    "order_id": order_id,
+                    "status": order.status,
+                    "otp": order.otp_code,
+                })
+            else:
+                return JSONResponse({
+                    "success": False,
+                    "message": check_resp.get("message", "Gagal check order"),
+                }, status_code=400)
+        except Exception as e:
+            return JSONResponse({"success": False, "message": f"Error: {e}"}, status_code=502)
 
 
 @router.get("/api-docs")

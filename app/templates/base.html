@@ -63,6 +63,9 @@
     .btn-danger:hover{background:rgba(255,92,92,.18);border-color:rgba(255,92,92,.3)}
     .btn-copy{background:#22243a;color:#8b8fa8;border:none;border-radius:6px;padding:4px 10px;font-size:.7rem;cursor:pointer;transition:all .15s;font-family:inherit}
     .btn-copy:hover{background:#6c63ff;color:#fff}
+    .btn-check{background:rgba(0,217,165,.08);color:#00d9a5;border:1px solid rgba(0,217,165,.2);border-radius:8px;padding:6px 14px;font-size:.78rem;cursor:pointer;transition:all .15s;font-family:inherit}
+    .btn-check:hover{background:rgba(0,217,165,.18);border-color:rgba(0,217,165,.35)}
+    .btn-check:disabled{opacity:.5;cursor:not-allowed}
 
     /* ── Tables ── */
     table{width:100%;border-collapse:collapse}
@@ -240,5 +243,6 @@
     }
   }
 </script>
+{% block scripts %}{% endblock %}
 </body>
 </html>

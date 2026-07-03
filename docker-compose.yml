@@ -5,6 +5,8 @@ services:
     restart: unless-stopped
     ports:
       - "8032:8032"
+    environment:
+      - TZ=Asia/Jakarta
     volumes:
       - ./main.py:/app/main.py
       - ./app:/app/app

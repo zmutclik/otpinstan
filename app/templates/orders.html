@@ -85,9 +85,16 @@
             <td style="color:#6b7280;font-size:.75rem">
               {% if o.created_at %}{{ o.created_at.strftime("%d/%m %H:%M") }}{% else %}&mdash;{% endif %}
             </td>
-            <td>
+            <td style="white-space:nowrap">
+              <button
+                onclick="checkOrder('{{ o.order_id }}', this)"
+                class="btn-check"
+                data-orderid="{{ o.order_id }}"
+                title="Check status OTP">Check</button>
               {% if st == "pending" %}
               <a href="/{{ username }}/cancel/{{ o.order_id }}" class="btn-danger"
+                 data-created="{% if o.created_at %}{{ o.created_at.strftime('%Y-%m-%dT%H:%M:%S') }}{% endif %}"
+                 data-orderid="{{ o.order_id }}"
                  onclick="return confirm('Cancel order ini?')">Cancel</a>
               {% endif %}
             </td>
@@ -134,8 +141,15 @@
           </span>
         </div>
         <div class="actions">
+          <button
+            onclick="checkOrder('{{ o.order_id }}', this)"
+            class="btn-check"
+            data-orderid="{{ o.order_id }}"
+            title="Check status OTP">Check</button>
           {% if st == "pending" %}
           <a href="/{{ username }}/cancel/{{ o.order_id }}" class="btn-danger"
+             data-created="{% if o.created_at %}{{ o.created_at.strftime('%Y-%m-%dT%H:%M:%S') }}{% endif %}"
+             data-orderid="{{ o.order_id }}"
              onclick="return confirm('Cancel order ini?')">Cancel</a>
           {% endif %}
           {% if o.otp_code %}
@@ -147,4 +161,109 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const CHECK_URL_BASE = '/{{ username }}/check/';
+const _countdownTimers = {};
+
+function startCancelCountdown(el) {
+  const createdRaw = el.dataset.created;
+  if (!createdRaw) return;
+  // created_at dari server adalah UTC
+  const createdAt = new Date(createdRaw + 'Z');
+  const expireAt = new Date(createdAt.getTime() + 120 * 1000);
+  const orderId = el.dataset.orderid;
+
+  function tick() {
+    const remaining = Math.ceil((expireAt - Date.now()) / 1000);
+    if (remaining <= 0) {
+      clearInterval(_countdownTimers[orderId]);
+      delete _countdownTimers[orderId];
+      el.textContent = 'Cancel';
+      el.style.color = '';
+      el.style.borderColor = '';
+      el.style.background = '';
+      return;
+    }
+    el.textContent = 'Cancel ' + remaining + 's';
+    el.style.color = remaining <= 30 ? '#ff5c5c' : '#f59e0b';
+    el.style.borderColor = remaining <= 30 ? 'rgba(255,92,92,.35)' : 'rgba(245,158,11,.35)';
+    el.style.background = remaining <= 30 ? 'rgba(255,92,92,.08)' : 'rgba(245,158,11,.08)';
+  }
+
+  const remaining = Math.ceil((expireAt - Date.now()) / 1000);
+  if (remaining <= 0) return;
+
+  tick();
+  _countdownTimers[orderId] = setInterval(tick, 1000);
+}
+
+// Inisialisasi countdown untuk semua tombol Cancel saat halaman load
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.btn-danger[data-created]').forEach(el => {
+    startCancelCountdown(el);
+  });
+});
+
+async function checkOrder(orderId, btn) {
+  btn.disabled = true;
+  btn.textContent = '...';
+  try {
+    const res = await fetch(CHECK_URL_BASE + orderId);
+    const data = await res.json();
+    if (data.success) {
+      // Update status badge
+      const row = btn.closest('tr') || btn.closest('.mobile-card');
+      if (row) {
+        const statusEl = row.querySelector('.badge');
+        if (statusEl && data.status) {
+          statusEl.className = 'badge badge-' + data.status;
+          statusEl.textContent = data.status;
+        }
+        // Update OTP cell
+        if (data.otp) {
+          const otpCells = row.querySelectorAll('td, .row');
+          otpCells.forEach(cell => {
+            if (cell.querySelector && cell.querySelector('.btn-copy')) {
+              const span = cell.querySelector('span');
+              if (span) { span.textContent = data.otp; }
+            }
+          });
+        }
+        // Hide cancel button if received/cancelled
+        if (data.status === 'received' || data.status === 'cancelled') {
+          const cancelBtn = row.querySelector('.btn-danger');
+          if (cancelBtn) cancelBtn.style.display = 'none';
+        }
+        if (data.status === 'cancelled') {
+          btn.style.display = 'none';
+        }
+      }
+      btn.textContent = data.status === 'received' ? '✓ OTP' : '✓ Done';
+      btn.disabled = false;
+      setTimeout(() => {
+        btn.textContent = 'Check';
+        startCountdown(btn);
+      }, 2000);
+    } else {
+      btn.textContent = '✗ Gagal';
+      btn.disabled = false;
+      setTimeout(() => {
+        btn.textContent = 'Check';
+        startCountdown(btn);
+      }, 2000);
+      alert('Check gagal: ' + (data.message || 'Unknown error'));
+    }
+  } catch (e) {
+    btn.textContent = '✗ Error';
+    btn.disabled = false;
+    setTimeout(() => {
+      btn.textContent = 'Check';
+      startCountdown(btn);
+    }, 2000);
+  }
+}
+</script>
 {% endblock %}

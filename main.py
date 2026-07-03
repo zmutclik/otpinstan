@@ -3,7 +3,12 @@ OTPInstan Bridge — FastAPI App (Multi-User)
 Run: uvicorn main:app --host 0.0.0.0 --port 8032
 """
 import os
+import time
 from contextlib import asynccontextmanager
+
+# Set timezone Indonesia (WIB = UTC+7)
+os.environ.setdefault("TZ", "Asia/Jakarta")
+time.tzset()
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, HTMLResponse
 from app.database import init_db
