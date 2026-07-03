@@ -100,6 +100,12 @@ async def catch_all(username: str, path: str, request: Request):
             order_id, request, username=username
         )
 
+    elif path.startswith("check/"):
+        order_id = path.split("/", 1)[1]
+        return await dashboard.check_order_route(
+            order_id, request, username=username
+        )
+
     return JSONResponse(
         {"success": False, "message": "Not found"}, status_code=404
     )

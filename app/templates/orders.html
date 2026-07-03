@@ -207,6 +207,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+function startCountdown(btn) {
+  // no-op: placeholder so btn cooldown doesn't error
+  // (cancel countdown is handled separately by startCancelCountdown)
+}
+
 async function checkOrder(orderId, btn) {
   btn.disabled = true;
   btn.textContent = '...';
